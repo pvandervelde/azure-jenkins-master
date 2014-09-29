@@ -17,6 +17,7 @@
         <DirBuild Condition=" '$(DirBuild)' == '' ">$(DirWorkspace)\build</DirBuild>
         <DirBuildLogs Condition=" '$(DirBuildLogs)' == '' ">$(DirBuild)\logs</DirBuildLogs>
         <DirBuildTemp Condition=" '$(DirBuildTemp)' == '' ">$(DirBuild)\temp</DirBuildTemp>
+        <DirBuildTempInstallers Condition=" '$(DirBuildTempInstallers)' == '' ">$(DirBuildTemp)\installers</DirBuildTempInstallers>
        
         <DirConfig Condition=" '$(DirConfig)' == '' ">$(DirWorkspace)\config</DirConfig>
         <DirScripts Condition=" '$(DirScripts)' == '' ">$(DirWorkspace)\scripts</DirScripts>
@@ -33,6 +34,7 @@
     </PropertyGroup>
 
     <Target Name="Build_Packer_Run" DependsOnTargets="_Build_Packer_DisplayInfo">
+        <CallTarget Targets="Build_Packer_GatherInstallers" />
         <CallTarget Targets="_Build_Packer_Build" />
     </Target>
     
@@ -42,6 +44,7 @@
         <Message Text="The directory containing the build output is located at:          $(DirBuild)" />
         <Message Text="The directory containing the build logs is located at:            $(DirBuildLogs)" />
         <Message Text="The directory containing the temporary build files is located at: $(DirBuildTemp)" />
+        <Message Text="The directory containing the installer files is located at:       $(DirBuildTempInstallers)" />
         <Message Text="The directory containing the packer configuration is located at:  $(DirConfig)" />
         <Message Text="The directory containing the installation scripts is located at:  $(DirScripts)" />
         <Message Text=" " />
@@ -51,6 +54,17 @@
         
         <Message Text="Packer command line executable is located at: $(ToolsExternalPackerPath)" />
         <Message Text=" " />
+    </Target>
+    
+    <Target Name="Build_Packer_GatherInstallers">
+        <MakeDir Directories="$(DirBuild)" 
+                 Condition="!Exists('$(DirBuild)')" />
+        <MakeDir Directories="$(DirBuildTemp)" 
+                 Condition="!Exists('$(DirBuildTemp)')" />
+        <MakeDir Directories="$(DirBuildTempInstallers)" 
+                 Condition="!Exists('$(DirBuildTempInstallers)')" />
+        
+        <!-- Download all required installers and ZIP archives -->
     </Target>
 
     <ItemGroup>
@@ -64,7 +78,7 @@
             <PackerVariableValue>c:\install</PackerVariableValue>
         </PackerVariables>
         <PackerVariables Include="installers_source_folder">
-            <PackerVariableValue></PackerVariableValue>
+            <PackerVariableValue>$(DirBuildTempInstallers)</PackerVariableValue>
         </PackerVariables>
         <PackerVariables Include="installers_script_folder">
             <PackerVariableValue>$(DirScripts)</PackerVariableValue>
