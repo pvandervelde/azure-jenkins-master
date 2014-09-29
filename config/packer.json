@@ -1,0 +1,38 @@
+{
+    "description": "This configuration builds a Windows 2012 R2 Datacenter server with a Jenkins master installed. The Jenkins master will not have any executors but will be ready for one or more slaves to connect.",
+    
+    "min_packer_version": "0.7.1",
+
+    "variables": 
+    {
+        "azure_subscription_name"       : "",
+        "azure_storage_account"         : "continuousintegration",
+        "installers_destination_folder" : "c:/install",
+        "installers_source_folder"      : "",
+        "installers_script_folder"      : ""
+    },
+  
+    "builders": 
+    [
+        {
+            "type"              : "azure",
+            "subscription_name" : "{{user `azure_subscription_name`}}",
+            "storage_account"   : "{{user `azure_storage_account`}}",
+            "os_type"           : "Windows",
+            "os_image_label"    : "Windows Server 2012 R2 Datacenter",
+            "location"          : "South East Asia",
+            "instance_size"     : "Basic A1",
+            "user_image_label"  : "Jenkins_Master_Win2012R2"
+        }
+    ],
+    
+    "provisioners": 
+    [
+        {
+            "type"               : "powershell-azure",
+            "distr_src_path"     : "{{user `installers_source_folder`}}",
+            "distr_dst_dir_path" : "{{user `installers_destination_folder`}}",
+            "script_path"        : "{{user `installers_script_folder`}}/Initialize-JenkinsMaster.ps1"
+        }
+    ]
+}
