@@ -6,7 +6,7 @@
     "variables": 
     {
         "azure_subscription_name"       : "",
-        "azure_storage_account"         : "continuousintegration",
+        "azure_storage_account"         : "",
         "installers_destination_folder" : "c:/install",
         "installers_source_folder"      : "",
         "installers_script_folder"      : ""
