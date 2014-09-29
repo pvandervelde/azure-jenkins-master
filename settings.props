@@ -213,7 +213,6 @@
                 $(BuildStepsPrepareRestoreNuGet);
                 $(BuildStepsPrepareReleaseNotes);
                 $(BuildStepsPrepareVcsInfo);
-                $(BuildStepsPrepareGenerateFiles)
             </Steps>
             <PreInvokeScripts></PreInvokeScripts>
             <PostInvokeScripts></PostInvokeScripts>
