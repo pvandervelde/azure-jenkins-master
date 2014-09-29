@@ -214,7 +214,7 @@
                 $(BuildStepsPrepareReleaseNotes);
                 $(BuildStepsPrepareVcsInfo);
             </Steps>
-            <PreInvokeScripts></PreInvokeScripts>
+            <PreInvokeScripts>$(DirWorkspace)\build.packer.msbuild</PreInvokeScripts>
             <PostInvokeScripts></PostInvokeScripts>
         </BuildStepsToExecute>
         <!--

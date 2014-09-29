@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0"
+         DefaultTargets="Build_Packer_Run"
+         xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <!-- Defines whether the current script file has been loaded / imported or not -->
+        <ExistsSharedLocateNBuildKit>true</ExistsSharedLocateNBuildKit>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <!-- Build flags -->
+        <ShouldDisplayDebugLog Condition=" '$(ShouldDisplayDebugLog)' == '' ">false</ShouldDisplayDebugLog>
+        <ShouldExecute Condition=" '$(ShouldExecute)' == '' ">true</ShouldExecute>
+        
+        <!-- Directories -->
+        <DirWorkspace Condition=" '$(DirWorkspace)' == '' ">$([System.IO.Path]::GetDirectoryName('$(BuildPropertyFile)'))</DirWorkspace>
+        <DirBuild Condition=" '$(DirBuild)' == '' ">$(DirWorkspace)\build</DirBuild>
+        <DirBuildLogs Condition=" '$(DirBuildLogs)' == '' ">$(DirBuild)\logs</DirBuildLogs>
+        <DirBuildTemp Condition=" '$(DirBuildTemp)' == '' ">$(DirBuild)\temp</DirBuildTemp>
+       
+        <DirConfig Condition=" '$(DirConfig)' == '' ">$(DirWorkspace)\config</DirConfig>
+        <DirScripts Condition=" '$(DirScripts)' == '' ">$(DirWorkspace)\scripts</DirScripts>
+        
+        <!-- Azure configuration -->
+        <AzureSubscriptionName Condition=" '$(AzureSubscriptionName)' == '' ">UNDEFINED</AzureSubscriptionName>
+        <AzureStorageAccount Condition=" '$(AzureStorageAccount)' == '' ">UNDEFINED</AzureStorageAccount>
+        
+        <!-- Files -->
+        <FilePackerConfig Condition=" '$(FilePackerConfig)' == '' ">UNDEFINED</FilePackerConfig>
+        
+        <!-- External tools -->
+        <ToolsExternalPackerPath Condition=" '$(ToolsExternalPackerPath)' == '' ">packer.exe</ToolsExternalPackerPath>
+    </PropertyGroup>
+
+    <Target Name="Build_Packer_Run" DependsOnTargets="_Build_Packer_DisplayInfo">
+        <CallTarget Targets="_Build_Packer_Build" />
+    </Target>
+    
+    <Target Name="_Build_Packer_DisplayInfo">
+        <Message Text="Project directory structure:" />
+        <Message Text="The workspace is located at:                                      $(DirWorkspace)" />
+        <Message Text="The directory containing the build output is located at:          $(DirBuild)" />
+        <Message Text="The directory containing the build logs is located at:            $(DirBuildLogs)" />
+        <Message Text="The directory containing the temporary build files is located at: $(DirBuildTemp)" />
+        <Message Text="The directory containing the packer configuration is located at:  $(DirConfig)" />
+        <Message Text="The directory containing the installation scripts is located at:  $(DirScripts)" />
+        <Message Text=" " />
+        
+        <Message Text="Packer configuration file is located at:      $(FilePackerConfig)" />
+        <Message Text=" " />
+        
+        <Message Text="Packer command line executable is located at: $(ToolsExternalPackerPath)" />
+        <Message Text=" " />
+    </Target>
+
+    <ItemGroup>
+        <PackerVariables Include="azure_subscription_name">
+            <PackerVariableValue>$(AzureSubscriptionName)</PackerVariableValue>
+        </PackerVariables>
+        <PackerVariables Include="azure_storage_account">
+            <PackerVariableValue>$(AzureStorageAccount)</PackerVariableValue>
+        </PackerVariables>
+        <PackerVariables Include="installers_destination_folder">
+            <PackerVariableValue>c:\install</PackerVariableValue>
+        </PackerVariables>
+        <PackerVariables Include="installers_source_folder">
+            <PackerVariableValue></PackerVariableValue>
+        </PackerVariables>
+        <PackerVariables Include="installers_script_folder">
+            <PackerVariableValue>$(DirScripts)</PackerVariableValue>
+        </PackerVariables>
+    </ItemGroup>
+    <Target Name="_Build_Packer_Build">
+        <Error Text="The packer executable does not exist."
+               Condition=" '$(ToolsExternalPackerPath)' == '' AND '$(ShouldExecute)' == 'true' "/>
+        
+        <Exec Command="&quot;$(ToolsExternalPackerPath)&quot; build -force &quot;$(FilePackerConfig)&quot; @(PackerVariables->'-var %22%(Identity)=%(PackerVariableValue)%22', ' ')"
+              WorkingDirectory="$(DirWorkspace)" 
+              Condition=" '$(ShouldExecute)' == 'true' "/>
+    </Target>
+</Project>
