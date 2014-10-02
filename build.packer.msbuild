@@ -17,7 +17,8 @@
         <DirBuild Condition=" '$(DirBuild)' == '' ">$(DirWorkspace)\build</DirBuild>
         <DirBuildLogs Condition=" '$(DirBuildLogs)' == '' ">$(DirBuild)\logs</DirBuildLogs>
         <DirBuildTemp Condition=" '$(DirBuildTemp)' == '' ">$(DirBuild)\temp</DirBuildTemp>
-        <DirBuildTempInstallers Condition=" '$(DirBuildTempInstallers)' == '' ">$(DirBuildTemp)\installers</DirBuildTempInstallers>
+        <DirBuildTempSetup Condition=" '$(DirBuildTempSetup)' == '' ">$(DirBuildTemp)\setup</DirBuildTempSetup>
+        <DirBuildTempSetupInstallers Condition=" '$(DirBuildTempSetupInstallers)' == '' ">$(DirBuildTempSetup)\installers</DirBuildTempSetupInstallers>
        
         <DirConfig Condition=" '$(DirConfig)' == '' ">$(DirWorkspace)\config</DirConfig>
         <DirScripts Condition=" '$(DirScripts)' == '' ">$(DirWorkspace)\scripts</DirScripts>
@@ -26,15 +27,23 @@
         <AzureSubscriptionName Condition=" '$(AzureSubscriptionName)' == '' ">UNDEFINED</AzureSubscriptionName>
         <AzureStorageAccount Condition=" '$(AzureStorageAccount)' == '' ">UNDEFINED</AzureStorageAccount>
         
-        <!-- Files -->
-        <FilePackerConfig Condition=" '$(FilePackerConfig)' == '' ">UNDEFINED</FilePackerConfig>
-        
         <!-- External tools -->
         <ToolsExternalPackerPath Condition=" '$(ToolsExternalPackerPath)' == '' ">packer.exe</ToolsExternalPackerPath>
+        
+        <!-- Files -->
+        <FileSemanticVersion Condition=" '$(FileSemanticVersion)' == '' ">$(DirBuildTemp)\semantic_version.json</FileSemanticVersion>
+        <FilePackerConfig Condition=" '$(FilePackerConfig)' == '' ">$(DirConfig)\packer.json</FilePackerConfig>
+        
+        <!-- Version number -->
+        <VersionSemantic>0</VersionSemantic>
     </PropertyGroup>
+    
+    <Import Project="$(DirMsBuildExtensions)\GetSemanticVersionFromFile.msbuild" 
+            Condition="Exists('$(DirMsBuildExtensions)\GetSemanticVersionFromFile.msbuild') AND '$(ExistsExtensionsGetSemanticVersionFromFile)' != 'true' " />
 
     <Target Name="Build_Packer_Run" DependsOnTargets="_Build_Packer_DisplayInfo">
-        <CallTarget Targets="Build_Packer_GatherInstallers" />
+        <CallTarget Targets="_Build_Packer__GetVersion" />
+        <CallTarget Targets="_Build_Packer_GatherInstallers" />
         <CallTarget Targets="_Build_Packer_Build" />
     </Target>
     
@@ -56,39 +65,59 @@
         <Message Text=" " />
     </Target>
     
-    <Target Name="Build_Packer_GatherInstallers">
+    <Target Name="_Build_Packer__GetVersion" Condition="Exists('$(FileSemanticVersion)')">
+        <GetSemanticVersionFromFile VersionFile="$(FileSemanticVersion)" 
+                                    Condition="Exists('$(FileSemanticVersion)') AND '$(ShouldExecute)' == 'true' ">
+            <Output TaskParameter="VersionSemantic" PropertyName="VersionSemantic" />
+        </GetSemanticVersionFromFile>
+        
+        <Message Text="Version: $(VersionSemantic)" />
+    </Target>
+    
+    <Target Name="_Build_Packer_GatherInstallers">
         <MakeDir Directories="$(DirBuild)" 
                  Condition="!Exists('$(DirBuild)')" />
         <MakeDir Directories="$(DirBuildTemp)" 
                  Condition="!Exists('$(DirBuildTemp)')" />
-        <MakeDir Directories="$(DirBuildTempInstallers)" 
-                 Condition="!Exists('$(DirBuildTempInstallers)')" />
+        <MakeDir Directories="$(DirBuildTempSetup)" 
+                 Condition="!Exists('$(DirBuildTempSetup)')" />
+        <MakeDir Directories="$(DirBuildTempSetupInstallers)" 
+                 Condition="!Exists('$(DirBuildTempSetupInstallers)')" />
         
         <!-- Download all required installers and ZIP archives -->
+        <ItemGroup>
+            <SetupScripts Include="$(DirScripts)\**\*.ps1" />
+        </ItemGroup>
+        <Copy SourceFiles="@(SetupScripts)"
+              DestinationFolder="$(DirBuildTempSetup)" />
     </Target>
 
-    <ItemGroup>
-        <PackerVariables Include="azure_subscription_name">
-            <PackerVariableValue>$(AzureSubscriptionName)</PackerVariableValue>
-        </PackerVariables>
-        <PackerVariables Include="azure_storage_account">
-            <PackerVariableValue>$(AzureStorageAccount)</PackerVariableValue>
-        </PackerVariables>
-        <PackerVariables Include="installers_destination_folder">
-            <PackerVariableValue>c:\install</PackerVariableValue>
-        </PackerVariables>
-        <PackerVariables Include="installers_source_folder">
-            <PackerVariableValue>$(DirBuildTempInstallers)</PackerVariableValue>
-        </PackerVariables>
-        <PackerVariables Include="installers_script_folder">
-            <PackerVariableValue>$(DirScripts)</PackerVariableValue>
-        </PackerVariables>
-    </ItemGroup>
     <Target Name="_Build_Packer_Build">
         <Error Text="The packer executable does not exist."
                Condition=" '$(ToolsExternalPackerPath)' == '' AND '$(ShouldExecute)' == 'true' "/>
+
+        <ItemGroup>
+            <PackerVariables Include="azure_subscription_name">
+                <PackerVariableValue>$(AzureSubscriptionName)</PackerVariableValue>
+            </PackerVariables>
+            <PackerVariables Include="azure_storage_account">
+                <PackerVariableValue>$(AzureStorageAccount)</PackerVariableValue>
+            </PackerVariables>
+            <PackerVariables Include="version_number">
+                <PackerVariableValue>$(VersionSemantic)</PackerVariableValue>
+            </PackerVariables>
+            <PackerVariables Include="installers_destination_folder">
+                <PackerVariableValue>c:\install</PackerVariableValue>
+            </PackerVariables>
+            <PackerVariables Include="installers_source_folder">
+                <PackerVariableValue>$(DirBuildTempSetup)</PackerVariableValue>
+            </PackerVariables>
+            <PackerVariables Include="installers_script_folder">
+                <PackerVariableValue>$(DirScripts)</PackerVariableValue>
+            </PackerVariables>
+        </ItemGroup>
         
-        <Exec Command="&quot;$(ToolsExternalPackerPath)&quot; build -force &quot;$(FilePackerConfig)&quot; @(PackerVariables->'-var %22%(Identity)=%(PackerVariableValue)%22', ' ')"
+        <Exec Command="&quot;$(ToolsExternalPackerPath)&quot; build -force @(PackerVariables->'-var %27%(Identity)=%(PackerVariableValue)%27', ' ') &quot;$(FilePackerConfig)&quot;"
               WorkingDirectory="$(DirWorkspace)" 
               Condition=" '$(ShouldExecute)' == 'true' "/>
     </Target>
