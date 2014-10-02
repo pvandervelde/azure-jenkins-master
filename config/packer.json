@@ -7,6 +7,7 @@
     {
         "azure_subscription_name"       : "",
         "azure_storage_account"         : "",
+        "version_number"                : "",
         "installers_destination_folder" : "c:/install",
         "installers_source_folder"      : "",
         "installers_script_folder"      : ""
@@ -21,8 +22,8 @@
             "os_type"           : "Windows",
             "os_image_label"    : "Windows Server 2012 R2 Datacenter",
             "location"          : "South East Asia",
-            "instance_size"     : "Basic A1",
-            "user_image_label"  : "Jenkins_Master_Win2012R2"
+            "instance_size"     : "ExtraSmall",
+            "user_image_label"  : "Jenkins_Master_Win2012R2_{{user `version_number`}}"
         }
     ],
     
