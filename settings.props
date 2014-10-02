@@ -211,11 +211,10 @@
         <BuildStepsToExecute Include="$(BuildTargetPrepare)">
             <Steps>
                 $(BuildStepsPrepareRestoreNuGet);
-                $(BuildStepsPrepareReleaseNotes);
                 $(BuildStepsPrepareVcsInfo);
             </Steps>
-            <PreInvokeScripts>$(DirWorkspace)\build.packer.msbuild</PreInvokeScripts>
-            <PostInvokeScripts></PostInvokeScripts>
+            <PreInvokeScripts></PreInvokeScripts>
+            <PostInvokeScripts>$(DirWorkspace)\build.packer.msbuild</PostInvokeScripts>
         </BuildStepsToExecute>
         <!--
         <BuildStepsToExecute Include="$(BuildTargetAnalyzeSource)">
